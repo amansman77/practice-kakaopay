@@ -1,5 +1,10 @@
 package com.ho.practice.kakaopay.controller;
 
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -7,6 +12,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ho.practice.kakaopay.model.Program;
+import com.ho.practice.kakaopay.model.Region;
+import com.ho.practice.kakaopay.model.Theme;
+import com.ho.practice.kakaopay.repository.ProgramRepository;
+import com.ho.practice.kakaopay.repository.RegionRepository;
+import com.ho.practice.kakaopay.repository.ThemeRepository;
+import com.ho.practice.kakaopay.util.AddressParser;
+import com.ho.practice.kakaopay.util.CsvParser;
 import com.ho.practice.kakaopay.vo.input.DataInsertI;
 import com.ho.practice.kakaopay.vo.input.DataUpdateI;
 import com.ho.practice.kakaopay.vo.output.ProgramListO;
@@ -17,9 +30,71 @@ import com.ho.practice.kakaopay.vo.output.ResultO;
 @RestController
 public class Controller {
 	
+	@Autowired
+	ProgramRepository programRepository;
+	@Autowired
+	ThemeRepository themeRepository;
+	@Autowired
+	RegionRepository regionRepository;
+	
 	@RequestMapping(value = "/init/database", method = RequestMethod.POST)
-    public ResultO greeting() {
-        return new ResultO();
+    public ResultO initDatabase() throws IOException {
+		// CSV ÌååÏùº Î∂àÎü¨Ïò§Í∏∞
+		String filePath = "data/ÏÑúÎ≤ÑÍ∞úÎ∞ú_ÏÇ¨Ï†ÑÍ≥ºÏ†ú2_2017ÎÖÑ_Íµ≠Î¶ΩÍ≥µÏõê_ÏÉùÌÉúÍ¥ÄÍ¥ë_Ï†ïÎ≥¥.csv";
+		CsvParser csvParser = new CsvParser(new ClassPathResource(filePath).getURI(), 6);
+		if(csvParser.hasNext()) {
+			// Ìó§Îçî Î≤ÑÎ¶º
+			csvParser.next();
+		}
+		while(csvParser.hasNext()) {
+			String[] columns = csvParser.next();
+			
+			Program program = new Program();
+			program.setProgramName(columns[1]);
+			program.setProgramDesc(columns[4]);
+			program.setProgramDetailDesc(columns[5]);
+			program = programRepository.save(program);
+			
+			String themeString = columns[2];
+			String[] tokens = themeString.split(",");
+			for (int i = 0; i < tokens.length; i++) {
+				String themeName = tokens[i];
+				if(StringUtils.isEmpty(themeName)) {
+					continue;
+				}
+				
+				Theme theme = themeRepository.findByThemeName(tokens[i]);
+				if(theme == null) {
+					// ÌÖåÎßàÍ∞Ä Ï°¥Ïû¨ÌïòÏßÄ ÏïäÏúºÎ©¥ Ï∂îÍ∞Ä
+					theme = new Theme(tokens[i]);
+					themeRepository.save(theme);
+				}
+			}
+			String regionString = columns[3];
+			tokens = regionString.split(",");
+			Region preRegion = new Region();
+			for (int i = 0; i < tokens.length; i++) {
+				String address = tokens[i];
+				if(StringUtils.isEmpty(address)) {
+					continue;
+				}
+				
+				// Ï£ºÏÜå ÌååÏã±
+				AddressParser parser = new AddressParser();
+				Region region = parser.parse(address);
+				if(StringUtils.isEmpty(region.getSidoName())) {
+					region.setSidoName(preRegion.getSidoName());
+				}
+				Region saveRegion = regionRepository.findBySidoNameAndSggNameAndEmdNameAndDetailAddress(region.getSidoName(), region.getSggName(), region.getEmdName(), region.getDetailAddress());
+				if(saveRegion == null) {
+					// ÏßÄÏó≠Ïù¥ Ï°¥Ïû¨ÌïòÏßÄ ÏïäÏúºÎ©¥ Ï∂îÍ∞Ä
+					regionRepository.save(region);
+				}
+				preRegion = region;
+			}
+		}
+		
+        return new ResultO("true");
     }
 	
 	@RequestMapping(value = "/data", method = RequestMethod.POST)
@@ -38,7 +113,7 @@ public class Controller {
     }
 	
 	/**
-	 * ª˝≈¬ ∞¸±§¡ˆ ¡ﬂø° º≠∫ÒΩ∫ ¡ˆø™ ƒ√∑≥ø°º≠ ∆Ø¡§ ¡ˆø™ø°º≠ ¡¯«‡µ«¥¬ «¡∑Œ±◊∑•∏Ì∞˙ ≈◊∏∂∏¶ π›»Ø
+	 * ÏÉùÌÉú Í¥ÄÍ¥ëÏßÄ Ï§ëÏóê ÏÑúÎπÑÏä§ ÏßÄÏó≠ Ïª¨ÎüºÏóêÏÑú ÌäπÏ†ï ÏßÄÏó≠ÏóêÏÑú ÏßÑÌñâÎêòÎäî ÌîÑÎ°úÍ∑∏Îû®Î™ÖÍ≥º ÌÖåÎßàÎ•º Î∞òÌôò
 	 */
 	@RequestMapping(value = "/program/list", method = RequestMethod.GET)
     public ProgramListO2 getProgramList(
@@ -48,7 +123,7 @@ public class Controller {
     }
 	
 	/**
-	 * ª˝≈¬ ¡§∫∏ µ•¿Ã≈Õø° "«¡∑Œ±◊∑• º“∞≥°± ƒ√∑≥ø°º≠ ∆Ø¡§ πÆ¿⁄ø≠¿Ã ∆˜«‘µ» ∑πƒ⁄µÂø°º≠ º≠∫ÒΩ∫ ¡ˆø™ ∞≥ºˆ∏¶ ººæÓ π›»Ø
+	 * ÏÉùÌÉú Ï†ïÎ≥¥ Îç∞Ïù¥ÌÑ∞Ïóê "ÌîÑÎ°úÍ∑∏Îû® ÏÜåÍ∞ú‚Äù Ïª¨ÎüºÏóêÏÑú ÌäπÏ†ï Î¨∏ÏûêÏó¥Ïù¥ Ìè¨Ìï®Îêú Î†àÏΩîÎìúÏóêÏÑú ÏÑúÎπÑÏä§ ÏßÄÏó≠ Í∞úÏàòÎ•º ÏÑ∏Ïñ¥ Î∞òÌôò
 	 */
 	@RequestMapping(value = "/program/count", method = RequestMethod.GET)
     public ResultMapO getProgramCount(
@@ -58,7 +133,7 @@ public class Controller {
     }
 	
 	/**
-	 * ¡ˆø™∏Ì∞˙ ∞¸±§ ≈∞øˆµÂ∏¶ ¿‘∑¬πﬁæ∆ «¡∑Œ±◊∑• ƒ⁄µÂ π›»Ø
+	 * ÏßÄÏó≠Î™ÖÍ≥º Í¥ÄÍ¥ë ÌÇ§ÏõåÎìúÎ•º ÏûÖÎ†•Î∞õÏïÑ ÌîÑÎ°úÍ∑∏Îû® ÏΩîÎìú Î∞òÌôò
 	 */
 	@RequestMapping(value = "/recommand/program", method = RequestMethod.GET)
     public ResultMapO getRecommandProgram(
@@ -68,9 +143,9 @@ public class Controller {
     }
 	
 	/**
-	 * ID, PW πﬁæ∆ ≥ª∫Œ DB ø° ∞Ë¡§ ¿˙¿Â«œ∞Ì ≈‰≈´ ª˝º∫«œø© ∑Œ±◊√‚∑¬
-	 * ∆–Ω∫øˆµÂ¥¬ ¿Œƒ⁄µ˘«œø© ¿˙¿Â
-	 * ≈‰≈´¿∫ ∆Ø¡§ secret ¿∏∑Œ º≠∏Ì«œø© ª˝º∫
+	 * ID, PW Î∞õÏïÑ ÎÇ¥Î∂Ä DB Ïóê Í≥ÑÏ†ï Ï†ÄÏû•ÌïòÍ≥† ÌÜ†ÌÅ∞ ÏÉùÏÑ±ÌïòÏó¨ Î°úÍ∑∏Ï∂úÎ†•
+	 * Ìå®Ïä§ÏõåÎìúÎäî Ïù∏ÏΩîÎî©ÌïòÏó¨ Ï†ÄÏû•
+	 * ÌÜ†ÌÅ∞ÏùÄ ÌäπÏ†ï secret ÏúºÎ°ú ÏÑúÎ™ÖÌïòÏó¨ ÏÉùÏÑ±
 	 */
 	@RequestMapping(value = "/member", method = RequestMethod.POST)
     public ResultO addMember(
@@ -81,7 +156,7 @@ public class Controller {
     }
 	
 	/**
-	 * ª˝º∫µ» ∞Ë¡§ (ID, PW)¿∏∑Œ ∑Œ±◊¿Œ ø‰√ª«œ∏È ≈‰≈´ πﬂ±ﬁ
+	 * ÏÉùÏÑ±Îêú Í≥ÑÏ†ï (ID, PW)ÏúºÎ°ú Î°úÍ∑∏Ïù∏ ÏöîÏ≤≠ÌïòÎ©¥ ÌÜ†ÌÅ∞ Î∞úÍ∏â
 	 */
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResultMapO login(
@@ -92,7 +167,7 @@ public class Controller {
     }
 	
 	/**
-	 * Authorization «Ï¥ıø° °∞Bearer Token°±¿∏∑Œ ¿‘∑¬ ø‰√ª¿ª «œ∏È ≈‰≈´¿ª ¿Áπﬂ±ﬁ
+	 * Authorization Ìó§ÎçîÏóê ‚ÄúBearer Token‚ÄùÏúºÎ°ú ÏûÖÎ†• ÏöîÏ≤≠ÏùÑ ÌïòÎ©¥ ÌÜ†ÌÅ∞ÏùÑ Ïû¨Î∞úÍ∏â
 	 */
 	@RequestMapping(value = "/token", method = RequestMethod.POST)
     public ResultMapO resetToken(
