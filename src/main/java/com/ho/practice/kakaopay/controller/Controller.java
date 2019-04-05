@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ho.practice.kakaopay.model.Program;
+import com.ho.practice.kakaopay.model.ProgramTheme;
 import com.ho.practice.kakaopay.model.Region;
+import com.ho.practice.kakaopay.model.ServiceRegion;
 import com.ho.practice.kakaopay.model.Theme;
 import com.ho.practice.kakaopay.repository.ProgramRepository;
+import com.ho.practice.kakaopay.repository.ProgramThemeRepository;
 import com.ho.practice.kakaopay.repository.RegionRepository;
+import com.ho.practice.kakaopay.repository.ServiceRegionRepository;
 import com.ho.practice.kakaopay.repository.ThemeRepository;
 import com.ho.practice.kakaopay.util.AddressParser;
 import com.ho.practice.kakaopay.util.CsvParser;
@@ -36,6 +40,10 @@ public class Controller {
 	ThemeRepository themeRepository;
 	@Autowired
 	RegionRepository regionRepository;
+	@Autowired
+	ProgramThemeRepository programThemeRepository;
+	@Autowired
+	ServiceRegionRepository serviceRegionRepository;
 	
 	@RequestMapping(value = "/init/database", method = RequestMethod.POST)
     public ResultO initDatabase() throws IOException {
@@ -55,6 +63,7 @@ public class Controller {
 			program.setProgramDetailDesc(columns[5]);
 			program = programRepository.save(program);
 			
+			// 테마 저장
 			String themeString = columns[2];
 			String[] tokens = themeString.split(",");
 			for (int i = 0; i < tokens.length; i++) {
@@ -67,9 +76,13 @@ public class Controller {
 				if(theme == null) {
 					// 테마가 존재하지 않으면 추가
 					theme = new Theme(tokens[i]);
-					themeRepository.save(theme);
+					theme = themeRepository.save(theme);
 				}
+				
+				programThemeRepository.save(new ProgramTheme(program.getProgramCode(), theme.getThemeCode()));
 			}
+			
+			// 주소 저장
 			String regionString = columns[3];
 			tokens = regionString.split(",");
 			Region preRegion = new Region();
@@ -88,8 +101,13 @@ public class Controller {
 				Region saveRegion = regionRepository.findBySidoNameAndSggNameAndEmdNameAndDetailAddress(region.getSidoName(), region.getSggName(), region.getEmdName(), region.getDetailAddress());
 				if(saveRegion == null) {
 					// 지역이 존재하지 않으면 추가
-					regionRepository.save(region);
+					region = regionRepository.save(region);
+				} else {
+					region.setRegionCode(saveRegion.getRegionCode());
 				}
+				
+				serviceRegionRepository.save(new ServiceRegion(program.getProgramCode(), region.getRegionCode()));
+				
 				preRegion = region;
 			}
 		}

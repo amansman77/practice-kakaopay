@@ -7,6 +7,9 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import lombok.Data;
+
+@Data
 @Entity
 public class Theme {
 

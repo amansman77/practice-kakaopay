@@ -7,9 +7,9 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import lombok.Setter;
+import lombok.Data;
 
-@Setter
+@Data
 @Entity
 public class Program {
 
