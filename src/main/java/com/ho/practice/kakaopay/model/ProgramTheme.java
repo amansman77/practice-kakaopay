@@ -7,6 +7,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 
+import lombok.Data;
+
+@Data
 @Entity
 @IdClass(ProgramThemeId.class)
 public class ProgramTheme implements Serializable {
@@ -25,6 +28,9 @@ public class ProgramTheme implements Serializable {
 	private String themeCode;
 
 	public ProgramTheme() {
+	}
+	public ProgramTheme(String programCode) {
+		this.programCode = programCode;
 	}
 	public ProgramTheme(String programCode, String themeCode) {
 		this.programCode = programCode;

@@ -27,7 +27,6 @@ public class Program {
 	private String programDetailDesc;
 	
 	public Program() {
-		
 	}
 	public Program(String programCode, String programName, String programDesc, String programDetailDesc) {
 		this.programCode = programCode;

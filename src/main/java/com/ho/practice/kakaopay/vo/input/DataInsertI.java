@@ -1,42 +1,25 @@
 package com.ho.practice.kakaopay.vo.input;
 
+import lombok.Data;
+
+@Data
 public class DataInsertI {
 
-	private String programTheme;
-    private String programName;
-    private String programDesc;
-    private String programDetailDesc;
+	private String program_theme;
+    private String program_name;
+    private String program_desc;
+    private String program_detail_desc;
     private String region;
     
-	public String getProgramTheme() {
-		return programTheme;
+    public DataInsertI() {
+    }
+    
+	public DataInsertI(String programName, String programDesc, String programDetailDesc, String themeString, String regionString) {
+		this.program_theme = themeString;
+		this.program_name = programName;
+		this.program_desc = programDesc;
+		this.program_detail_desc = programDetailDesc;
+		this.region = regionString;
 	}
-	public void setProgramTheme(String programTheme) {
-		this.programTheme = programTheme;
-	}
-	public String getProgramName() {
-		return programName;
-	}
-	public void setProgramName(String programName) {
-		this.programName = programName;
-	}
-	public String getProgramDesc() {
-		return programDesc;
-	}
-	public void setProgramDesc(String programDesc) {
-		this.programDesc = programDesc;
-	}
-	public String getProgramDetailDesc() {
-		return programDetailDesc;
-	}
-	public void setProgramDetailDesc(String programDetailDesc) {
-		this.programDetailDesc = programDetailDesc;
-	}
-	public String getRegion() {
-		return region;
-	}
-	public void setRegion(String region) {
-		this.region = region;
-	}
-
+	
 }

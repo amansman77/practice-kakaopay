@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.util.StringUtils;
 
 import lombok.Data;
 
@@ -33,5 +34,19 @@ public class Region {
 			return;
 		}
 		this.detailAddress = detailAddress;
+	}
+
+	public String getAddress() {
+		String s = sidoName;
+		if(!StringUtils.isEmpty(sggName)) {
+			s += " " + sggName;
+		}
+		if(!StringUtils.isEmpty(emdName)) {
+			s += " " + emdName;
+		}
+		if(!StringUtils.isEmpty(detailAddress)) {
+			s += " " + detailAddress;
+		}
+		return s;
 	}
 }

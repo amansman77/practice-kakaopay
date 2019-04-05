@@ -22,6 +22,8 @@ public class Theme {
 	@Column(columnDefinition = "varchar(16)", nullable = false)
 	private String themeName;
 	
+	public Theme() {
+	}
 	public Theme(String themeName) {
 		this.themeName = themeName;
 	}

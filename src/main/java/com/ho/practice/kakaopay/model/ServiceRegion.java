@@ -7,6 +7,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 
+import lombok.Data;
+
+@Data
 @Entity
 @IdClass(ServiceRegionId.class)
 public class ServiceRegion implements Serializable {
@@ -25,6 +28,9 @@ public class ServiceRegion implements Serializable {
 	private String regionCode;
 
 	public ServiceRegion() {
+	}
+	public ServiceRegion(String programCode) {
+		this.programCode = programCode;
 	}
 	public ServiceRegion(String programCode, String regionCode) {
 		this.programCode = programCode;

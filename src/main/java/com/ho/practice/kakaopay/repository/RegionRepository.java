@@ -9,5 +9,7 @@ import com.ho.practice.kakaopay.model.Region;
 public interface RegionRepository extends JpaRepository<Region, Long>{
 
 	Region findBySidoNameAndSggNameAndEmdNameAndDetailAddress(String sidoName, String sggName, String emdName, String detailAddress);
-	
+
+	Region findByRegionCode(String regionCode);
+
 }

@@ -1,10 +1,9 @@
 package com.ho.practice.kakaopay.controller;
 
-import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,17 +11,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ho.practice.kakaopay.model.Program;
-import com.ho.practice.kakaopay.model.ProgramTheme;
-import com.ho.practice.kakaopay.model.Region;
-import com.ho.practice.kakaopay.model.ServiceRegion;
-import com.ho.practice.kakaopay.model.Theme;
-import com.ho.practice.kakaopay.repository.ProgramRepository;
-import com.ho.practice.kakaopay.repository.ProgramThemeRepository;
-import com.ho.practice.kakaopay.repository.RegionRepository;
-import com.ho.practice.kakaopay.repository.ServiceRegionRepository;
-import com.ho.practice.kakaopay.repository.ThemeRepository;
-import com.ho.practice.kakaopay.util.AddressParser;
+import com.ho.practice.kakaopay.dto.TourInfo;
+import com.ho.practice.kakaopay.service.Service;
 import com.ho.practice.kakaopay.util.CsvParser;
 import com.ho.practice.kakaopay.vo.input.DataInsertI;
 import com.ho.practice.kakaopay.vo.input.DataUpdateI;
@@ -35,18 +25,10 @@ import com.ho.practice.kakaopay.vo.output.ResultO;
 public class Controller {
 	
 	@Autowired
-	ProgramRepository programRepository;
-	@Autowired
-	ThemeRepository themeRepository;
-	@Autowired
-	RegionRepository regionRepository;
-	@Autowired
-	ProgramThemeRepository programThemeRepository;
-	@Autowired
-	ServiceRegionRepository serviceRegionRepository;
+	Service service;
 	
 	@RequestMapping(value = "/init/database", method = RequestMethod.POST)
-    public ResultO initDatabase() throws IOException {
+    public ResultO initDatabase() throws Exception {
 		// CSV 파일 불러오기
 		String filePath = "data/서버개발_사전과제2_2017년_국립공원_생태관광_정보.csv";
 		CsvParser csvParser = new CsvParser(new ClassPathResource(filePath).getURI(), 6);
@@ -56,78 +38,47 @@ public class Controller {
 		}
 		while(csvParser.hasNext()) {
 			String[] columns = csvParser.next();
-			
-			Program program = new Program();
-			program.setProgramName(columns[1]);
-			program.setProgramDesc(columns[4]);
-			program.setProgramDetailDesc(columns[5]);
-			program = programRepository.save(program);
-			
-			// 테마 저장
-			String themeString = columns[2];
-			String[] tokens = themeString.split(",");
-			for (int i = 0; i < tokens.length; i++) {
-				String themeName = tokens[i];
-				if(StringUtils.isEmpty(themeName)) {
-					continue;
-				}
-				
-				Theme theme = themeRepository.findByThemeName(tokens[i]);
-				if(theme == null) {
-					// 테마가 존재하지 않으면 추가
-					theme = new Theme(tokens[i]);
-					theme = themeRepository.save(theme);
-				}
-				
-				programThemeRepository.save(new ProgramTheme(program.getProgramCode(), theme.getThemeCode()));
-			}
-			
-			// 주소 저장
-			String regionString = columns[3];
-			tokens = regionString.split(",");
-			Region preRegion = new Region();
-			for (int i = 0; i < tokens.length; i++) {
-				String address = tokens[i];
-				if(StringUtils.isEmpty(address)) {
-					continue;
-				}
-				
-				// 주소 파싱
-				AddressParser parser = new AddressParser();
-				Region region = parser.parse(address);
-				if(StringUtils.isEmpty(region.getSidoName())) {
-					region.setSidoName(preRegion.getSidoName());
-				}
-				Region saveRegion = regionRepository.findBySidoNameAndSggNameAndEmdNameAndDetailAddress(region.getSidoName(), region.getSggName(), region.getEmdName(), region.getDetailAddress());
-				if(saveRegion == null) {
-					// 지역이 존재하지 않으면 추가
-					region = regionRepository.save(region);
-				} else {
-					region.setRegionCode(saveRegion.getRegionCode());
-				}
-				
-				serviceRegionRepository.save(new ServiceRegion(program.getProgramCode(), region.getRegionCode()));
-				
-				preRegion = region;
-			}
+			service.saveTourInfo(null, columns[1], columns[4], columns[5], columns[2], columns[3]);
 		}
 		
         return new ResultO("true");
     }
 	
+	/**
+	 * 관광정보 데이터 추가
+	 * @param dataInsertI
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping(value = "/data", method = RequestMethod.POST)
-    public ResultO addData(@RequestBody(required=true) DataInsertI dataInsertI) {
-		return new ResultO();
+    public ResultO addData(@RequestBody(required=true) DataInsertI dataInsertI) throws Exception {
+		service.saveTourInfo(null, dataInsertI.getProgram_name(), dataInsertI.getProgram_desc(), dataInsertI.getProgram_detail_desc()
+				, dataInsertI.getProgram_theme(), dataInsertI.getRegion());
+		return new ResultO("true");
     }
 	
+	/**
+	 * 관광정보 데이터 수정
+	 * @param dataUpdateI
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping(value = "/data", method = RequestMethod.PUT)
-    public ResultO updateData(@RequestBody(required=true) DataUpdateI dataUpdateI) {
-        return new ResultO();
+    public ResultO updateData(@RequestBody(required=true) DataUpdateI dataUpdateI) throws Exception {
+		service.saveTourInfo(dataUpdateI.getProgram_code(), dataUpdateI.getProgram_name(), dataUpdateI.getProgram_desc(), dataUpdateI.getProgram_detail_desc()
+				, dataUpdateI.getProgram_theme(), dataUpdateI.getRegion());
+        return new ResultO("true");
     }
 	
+	/**
+	 * 관광정보 데이터 조회
+	 * @param regionCode
+	 * @return
+	 */
 	@RequestMapping(value = "/data", method = RequestMethod.GET)
-    public ProgramListO getData(@RequestParam(value="regionId") String regionId) {
-        return new ProgramListO();
+    public ProgramListO getData(@RequestParam(value="regionCode") String regionCode) {
+		List<TourInfo> list = service.getTourInfo(regionCode);
+        return new ProgramListO(regionCode, list);
     }
 	
 	/**

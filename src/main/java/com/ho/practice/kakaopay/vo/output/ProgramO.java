@@ -1,5 +1,7 @@
 package com.ho.practice.kakaopay.vo.output;
 
+import com.ho.practice.kakaopay.dto.TourInfo;
+
 public class ProgramO {
 
 	private String program_id;
@@ -9,6 +11,16 @@ public class ProgramO {
     private String program_detail_desc;
     private String region;
     
+    public ProgramO() {}
+	public ProgramO(TourInfo tourInfo) {
+		this.program_id = "";
+		this.program_theme = tourInfo.getThemeString();
+		this.program_name = tourInfo.getProgramName();
+		this.program_desc = tourInfo.getProgramDesc();
+		this.program_detail_desc = tourInfo.getProgramDetailDesc();
+		this.region = tourInfo.getRegionString();
+	}
+	
 	public String getProgram_id() {
 		return program_id;
 	}
