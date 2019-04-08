@@ -13,5 +13,9 @@ public interface ServiceRegionRepository extends JpaRepository<ServiceRegion, Lo
 	List<ServiceRegion> findByProgramCode(String programCode);
 
 	List<ServiceRegion> findByRegionCode(String regionCode);
-	
+
+	List<ServiceRegion> findByRegionCodeIn(List<String> regionCodeList);
+
+	List<ServiceRegion> findByProgramCodeIn(List<String> programCodeList);
+
 }

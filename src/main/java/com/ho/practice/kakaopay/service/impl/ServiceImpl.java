@@ -1,7 +1,10 @@
 package com.ho.practice.kakaopay.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -125,7 +128,7 @@ public class ServiceImpl implements Service {
 	}
 
 	@Override
-	public List<TourInfo> getTourInfo(String regionCode) {
+	public List<TourInfo> getTourInfoByRegionCode(String regionCode) {
 		List<TourInfo> tourInfoList = new ArrayList<>();
 		
 		// 지역에 속한 프로그래 목록 조회
@@ -142,10 +145,156 @@ public class ServiceImpl implements Service {
 			}
 		}
 				
-		// 프로그램 데이터 조회
+		// 프로그램 데이터 및 테마 조회
+		Map<String, Program> programMap = this.getProgramMap(programCodeList);
+		Map<String, String> themeStringMap = this.getProgramThemeMap(programCodeList);
+		
+		// 관광정보 데이터 설정
+		Iterator<String> itr = programMap.keySet().iterator();
+		while(itr.hasNext()) {
+			String programCode = itr.next();
+			Program program = programMap.get(programCode);
+			String themeString = themeStringMap.get(programCode);
+			tourInfoList.add(new TourInfo(program.getProgramCode(), program.getProgramName(), program.getProgramDesc(), program.getProgramDetailDesc()
+					, themeString, region));
+		}
+		
+		return tourInfoList;
+	}
+
+	@Override
+	public List<TourInfo> getTourInfoByResionName(String regionName) {
+		List<TourInfo> tourInfoList = new ArrayList<>();
+		
+		// 지역 목록 조회
+		List<Region> regionList = regionRepository.findBySidoNameOrSggNameOrEmdName(regionName, regionName, regionName);
+
+		for (Region region : regionList) {
+			// 프로그램 정보 추출
+			List<ServiceRegion> serviceRegionList = serviceRegionRepository.findByRegionCode(region.getRegionCode());
+			List<String> programCodeList = new ArrayList<>();
+			for (int i = 0; i < serviceRegionList.size(); i++) {
+				if(!programCodeList.contains(serviceRegionList.get(i).getProgramCode())) {
+					programCodeList.add(serviceRegionList.get(i).getProgramCode());
+				}
+			}
+			
+			// 프로그램 정보와 테마정보 조회
+			Map<String, Program> programMap = this.getProgramMap(programCodeList);
+			Map<String, String> themeStringMap = this.getProgramThemeMap(programCodeList);
+			
+			Iterator<String> itr = programMap.keySet().iterator();
+			while(itr.hasNext()) {
+				String programCode = itr.next();
+				Program program = programMap.get(programCode);
+				String themeString = themeStringMap.get(programCode);
+				tourInfoList.add(new TourInfo(programCode, program.getProgramName(), program.getProgramDesc(), program.getProgramDetailDesc(), themeString, region));
+			}
+		}
+		
+		return tourInfoList;
+	}
+
+	@Override
+	public List<TourInfo> getTourInfoSearchProgramDesc(String keyword) {
+		List<TourInfo> tourInfoList = new ArrayList<>();
+		
+		List<Program> programList = programRepository.findByProgramDescContaining(keyword);
+		// 프로그램 코드 추출
+		List<String> programCodeList = new ArrayList<>();
+		for (int i = 0; i < programList.size(); i++) {
+			if(!programCodeList.contains(programList.get(i).getProgramCode())) {
+				programCodeList.add(programList.get(i).getProgramCode());
+			}
+		}
+		
+		Map<String, List<Region>> regionMap = this.getRegionMap(programCodeList);
+		Iterator<String> itr = regionMap.keySet().iterator();
+		while(itr.hasNext()) {
+			String programCode = itr.next();
+			List<Region> regionList = regionMap.get(programCode);
+			for (Region region : regionList) {
+				tourInfoList.add(new TourInfo(programCode, null, null, null, null, region));
+			}
+		}
+		
+		return tourInfoList;
+	}
+
+	@Override
+	public int getWordCountFromProgramDetailDesc(String keyword) {
+		List<String> list = programRepository.findProgramDescAll();
+		int count = 0;
+		for (String detailDesc : list) {
+			int nextIdx = 0;
+			while(detailDesc != null) {
+				nextIdx = detailDesc.indexOf(keyword, nextIdx);
+				if(nextIdx < 0) {
+					break;
+				} else {
+					nextIdx += keyword.length();
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	/**
+	 * 프로그램 코드를 키로하는 Program 객체 맵 반환
+	 * @param programCodeList
+	 * @return
+	 */
+	private Map<String, Program> getProgramMap(List<String> programCodeList) {
+		Map<String, Program> map = new HashMap<>();
 		List<Program> programList = programRepository.findByProgramCodeIn(programCodeList);
-				
-		// 프로그램 테마 조회
+		for (int i = 0; i < programList.size(); i++) {
+			map.put(programList.get(i).getProgramCode(), programList.get(i));
+		}
+		return map;
+	}
+
+	@SuppressWarnings("serial")
+	private Map<String, List<Region>> getRegionMap(List<String> programCodeList) {
+		Map<String, List<Region>> map = new HashMap<>();
+		
+		List<ServiceRegion> serviceRegionList = serviceRegionRepository.findByProgramCodeIn(programCodeList);
+		List<String> regionCodeList = new ArrayList<>();
+		for (int i = 0; i < serviceRegionList.size(); i++) {
+			if(!regionCodeList.contains(serviceRegionList.get(i).getRegionCode())) {
+				regionCodeList.add(serviceRegionList.get(i).getRegionCode());
+			}
+		}
+		
+		List<Region> regionList = regionRepository.findByRegionCodeIn(regionCodeList);
+		for (int i = 0; i < serviceRegionList.size(); i++) {
+			ServiceRegion sr = serviceRegionList.get(i);
+			for (Region region : regionList) {
+				if(sr.getRegionCode().equals(region.getRegionCode())) {
+					if(map.containsKey(sr.getProgramCode())) {
+						// 이미 존재하면 테마 추가
+						map.get(sr.getProgramCode()).add(region);
+					} else {
+						map.put(sr.getProgramCode(), new ArrayList<Region>() {{
+						    add(region);
+						}});
+					}
+					break;
+				}
+			}
+		}
+		
+		return map;
+	}
+
+	/**
+	 * 프로그램 코드를 키로하는 theme string 맵 반환
+	 * @param programCodeList
+	 * @return
+	 */
+	private Map<String, String> getProgramThemeMap(List<String> programCodeList) {
+		Map<String, String> map = new HashMap<>();
+		
 		List<ProgramTheme> programThemeList = programThemeRepository.findByProgramCodeIn(programCodeList);
 		List<String> themeCodeList = new ArrayList<>();
 		for (int i = 0; i < programThemeList.size(); i++) {
@@ -155,28 +304,22 @@ public class ServiceImpl implements Service {
 		}
 		List<Theme> themeList = themeRepository.findByThemeCodeIn(themeCodeList);
 		
-		// 관광정보 데이터 설정
-		for (int i = 0; i < programList.size(); i++) {
-			Program program = programList.get(i);
-			String themeString = "";
-			for (int j = 0; j < programThemeList.size(); j++) {
-				if(program.getProgramCode().equals(programThemeList.get(j).getProgramCode())) {
-					// 동일한 프로그램이면 테마 추가
-					for (int j2 = 0; j2 < themeList.size(); j2++) {
-						if(programThemeList.get(j).getThemeCode().equals(themeList.get(j2).getThemeCode())) {
-							if(themeString.length() > 0) {
-								themeString += ",";
-							}
-							themeString += themeList.get(j2).getThemeName();
-						}
+		for (int i = 0; i < programThemeList.size(); i++) {
+			ProgramTheme ph = programThemeList.get(i);
+			for (Theme theme : themeList) {
+				if(ph.getThemeCode().equals(theme.getThemeCode())) {
+					if(map.containsKey(ph.getProgramCode())) {
+						// 이미 존재하면 테마 추가
+						map.put(ph.getProgramCode(), map.get(ph.getProgramCode()) + "," + theme.getThemeName());
+					} else {
+						map.put(ph.getProgramCode(), theme.getThemeName());
 					}
+					break;
 				}
 			}
-			tourInfoList.add(new TourInfo(program.getProgramCode(), program.getProgramName(), program.getProgramDesc(), program.getProgramDetailDesc()
-					, themeString, region));
 		}
 		
-		return tourInfoList;
+		return map;
 	}
-
+	
 }

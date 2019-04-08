@@ -1,6 +1,9 @@
 package com.ho.practice.kakaopay.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -16,10 +19,12 @@ import com.ho.practice.kakaopay.service.Service;
 import com.ho.practice.kakaopay.util.CsvParser;
 import com.ho.practice.kakaopay.vo.input.DataInsertI;
 import com.ho.practice.kakaopay.vo.input.DataUpdateI;
+import com.ho.practice.kakaopay.vo.output.ProgramCountListO;
 import com.ho.practice.kakaopay.vo.output.ProgramListO;
 import com.ho.practice.kakaopay.vo.output.ProgramListO2;
 import com.ho.practice.kakaopay.vo.output.ResultMapO;
 import com.ho.practice.kakaopay.vo.output.ResultO;
+import com.ho.practice.kakaopay.vo.output.WordCountO;
 
 @RestController
 public class Controller {
@@ -77,7 +82,7 @@ public class Controller {
 	 */
 	@RequestMapping(value = "/data", method = RequestMethod.GET)
     public ProgramListO getData(@RequestParam(value="regionCode") String regionCode) {
-		List<TourInfo> list = service.getTourInfo(regionCode);
+		List<TourInfo> list = service.getTourInfoByRegionCode(regionCode);
         return new ProgramListO(regionCode, list);
     }
 	
@@ -85,20 +90,58 @@ public class Controller {
 	 * 생태 관광지 중에 서비스 지역 컬럼에서 특정 지역에서 진행되는 프로그램명과 테마를 반환
 	 */
 	@RequestMapping(value = "/program/list", method = RequestMethod.GET)
-    public ProgramListO2 getProgramList(
+    public List<ProgramListO2> getProgramList(
     		@RequestParam(value="region") String region
     ) {
-		return new ProgramListO2();
+		List<ProgramListO2> resultList = new ArrayList<>();
+		
+		List<TourInfo> list = service.getTourInfoByResionName(region);
+		for (int i = 0; i < list.size(); i++) {
+			TourInfo ti = list.get(i);
+			List<TourInfo> subList = new ArrayList<>();
+			subList.add(ti);
+			for (int j = i+1; j < list.size(); j++) {
+				if(ti.getRegionCode().equals(list.get(j).getRegionCode())) {
+					subList.add(list.get(j));
+					list.remove(j--);
+				}
+			}
+			resultList.add(new ProgramListO2(subList));
+		}
+		return resultList;
     }
 	
 	/**
 	 * 생태 정보 데이터에 "프로그램 소개” 컬럼에서 특정 문자열이 포함된 레코드에서 서비스 지역 개수를 세어 반환
 	 */
-	@RequestMapping(value = "/program/count", method = RequestMethod.GET)
-    public ResultMapO getProgramCount(
+	@RequestMapping(value = "/program/count/region", method = RequestMethod.GET)
+    public ProgramCountListO getProgramCountAsRegion(
     		@RequestParam(value="keyword") String keyword
     ) {
-		return new ResultMapO();
+		List<TourInfo> list = service.getTourInfoSearchProgramDesc(keyword);
+		
+		Map<String, Integer> countMap = new HashMap<>();
+		for (TourInfo tourInfo : list) {
+			if(countMap.containsKey(tourInfo.getRegionString())) {
+				countMap.put(tourInfo.getRegionString(), countMap.get(tourInfo.getRegionString())+1);
+			} else {
+				countMap.put(tourInfo.getRegionString(), 1);
+			}
+		}
+		
+		return new ProgramCountListO(keyword, countMap);
+    }
+	
+	/**
+	 * 모든 레코드에 프로그램 상세 정보를 읽어와서 입력 단어의 출현빈도수를 계산하여 반환
+	 */
+	@RequestMapping(value = "/program/count/word", method = RequestMethod.GET)
+    public WordCountO getProgramCountAsWord(
+    		@RequestParam(value="keyword") String keyword
+    ) {
+		int count = service.getWordCountFromProgramDetailDesc(keyword);
+		
+		return new WordCountO(keyword, count);
     }
 	
 	/**

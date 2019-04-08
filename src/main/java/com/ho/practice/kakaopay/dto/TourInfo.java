@@ -12,6 +12,7 @@ public class TourInfo {
 	String programDesc;
 	String programDetailDesc;
 	String themeString;
+	String regionCode;
 	String regionString;
 	
 	public TourInfo() {}
@@ -21,7 +22,10 @@ public class TourInfo {
 		this.programDesc = programDesc;
 		this.programDetailDesc = programDetailDesc;
 		this.themeString = themeString;
-		this.regionString = region.getAddress();
+		if(region != null) {
+			this.regionCode = region.getRegionCode();
+			this.regionString = region.getAddress();
+		}
 	}
 	
 }

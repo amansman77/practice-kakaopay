@@ -38,7 +38,7 @@ public class AddressParser {
 				if(name.length()-1 == name.indexOf("À¾")
 					|| name.length()-1 == name.indexOf("¸é")
 					|| name.length()-1 == name.indexOf("µ¿")) {
-					region.setSggName(name);
+					region.setEmdName(name);
 				} else {
 					region.setDetailAddress(name);
 				}

@@ -9,6 +9,12 @@ public interface Service {
 	void saveTourInfo(String programCode, String programName, String programDesc, String programDetailDesc
 			, String themeString, String regionString) throws Exception;
 
-	List<TourInfo> getTourInfo(String regionCode);
+	List<TourInfo> getTourInfoByRegionCode(String regionCode);
+
+	List<TourInfo> getTourInfoByResionName(String regionName);
+
+	List<TourInfo> getTourInfoSearchProgramDesc(String keyword);
+
+	int getWordCountFromProgramDetailDesc(String keyword);
 
 }
