@@ -1,10 +1,12 @@
 package com.ho.practice.kakaopay.util;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 public class CsvParser {
@@ -13,9 +15,23 @@ public class CsvParser {
 	private int columnSize;
 	private int pos = 1;
 	
-	public CsvParser(URI uri, int columnSize) throws FileNotFoundException {
-		FileReader fr = new FileReader(new File(uri));
-		br = new BufferedReader(fr);
+	public CsvParser(URI uri, int columnSize) throws FileNotFoundException, UnsupportedEncodingException {
+		FileInputStream fi = new FileInputStream(uri.getPath());
+		InputStreamReader isr = new InputStreamReader(fi, "euc-kr");
+		br = new BufferedReader(isr);
+		this.columnSize = columnSize;
+	}
+
+	public CsvParser(String path, int columnSize) throws FileNotFoundException, UnsupportedEncodingException {
+		FileInputStream fi = new FileInputStream(path);
+		InputStreamReader isr = new InputStreamReader(fi, "euc-kr");
+		br = new BufferedReader(isr);
+		this.columnSize = columnSize;
+	}
+
+	public CsvParser(InputStream inputStream, int columnSize) throws UnsupportedEncodingException {
+		InputStreamReader isr = new InputStreamReader(inputStream, "euc-kr");
+		br = new BufferedReader(isr);
 		this.columnSize = columnSize;
 	}
 
@@ -46,12 +62,12 @@ public class CsvParser {
 				continue;
 	        } else if (!isCurrentData && c == ',') {
 	        	// 데이터 구분
-				arr[columnIdx++] = String.valueOf(curData).trim();
+				arr[columnIdx++] = curData.toString();
 				curData = new StringBuffer();
 	        } else if((!isCurrentData && c == '\r')
 					|| columnIdx == columnSize) {
 	        	// 데이터의 끝
-				arr[columnIdx++] = String.valueOf(curData).trim();
+				arr[columnIdx++] = curData.toString();
 				curData = new StringBuffer();
 				break;
 			} else {

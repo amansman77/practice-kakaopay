@@ -20,10 +20,10 @@ public class ProgramCodeGenerator implements IdentifierGenerator {
 	    try {
 	        Statement statement=connection.createStatement();
 
-	        connection.setAutoCommit(false);
-	        ResultSet rs=statement.executeQuery("select next_val as Id from program_seq_generator where sequence_name = 'program_code'");
-	        statement.executeQuery("update program_seq_generator set next_val = next_val+1 where sequence_name = 'program_code'");
-
+	        ResultSet rs=statement.executeQuery("select next_val as Id from kakao_seq_generator where sequence_name = 'program_code'");
+	        statement.executeQuery("update kakao_seq_generator set next_val = next_val+1 where sequence_name = 'program_code'");
+	        connection.commit();
+	        
 	        if(rs.next())
 	        {
 	            int id=rs.getInt(1);
@@ -31,7 +31,6 @@ public class ProgramCodeGenerator implements IdentifierGenerator {
 	            return generatedId;
 	        }
 	        
-	        connection.commit();
 	    } catch (SQLException e) {
 	    	try {
 				connection.rollback();

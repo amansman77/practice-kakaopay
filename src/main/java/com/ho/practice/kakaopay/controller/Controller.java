@@ -34,9 +34,12 @@ public class Controller {
 	
 	@RequestMapping(value = "/init/database", method = RequestMethod.POST)
     public ResultO initDatabase() throws Exception {
+		// 테이블 구축
+		service.initDatabase();
+		
 		// CSV 파일 불러오기
-		String filePath = "data/서버개발_사전과제2_2017년_국립공원_생태관광_정보.csv";
-		CsvParser csvParser = new CsvParser(new ClassPathResource(filePath).getURI(), 6);
+		ClassPathResource classPathResource = new ClassPathResource("data/2_2017.csv");
+		CsvParser csvParser = new CsvParser(classPathResource.getInputStream(), 6);
 		if(csvParser.hasNext()) {
 			// 헤더 버림
 			csvParser.next();

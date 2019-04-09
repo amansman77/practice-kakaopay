@@ -21,8 +21,8 @@ public class ThemeCodeGenerator implements IdentifierGenerator {
 	        Statement statement=connection.createStatement();
 
 	        connection.setAutoCommit(false);
-	        ResultSet rs=statement.executeQuery("select next_val as Id from program_seq_generator where sequence_name = 'theme_code'");
-	        statement.executeQuery("update program_seq_generator set next_val = next_val+1 where sequence_name = 'theme_code'");
+	        ResultSet rs=statement.executeQuery("select next_val as Id from kakao_seq_generator where sequence_name = 'theme_code'");
+	        statement.executeQuery("update kakao_seq_generator set next_val = next_val+1 where sequence_name = 'theme_code'");
 
 	        if(rs.next())
 	        {

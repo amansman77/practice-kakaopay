@@ -6,6 +6,8 @@ import com.ho.practice.kakaopay.dto.TourInfo;
 
 public interface Service {
 
+	void initDatabase();
+
 	void saveTourInfo(String programCode, String programName, String programDesc, String programDetailDesc
 			, String themeString, String regionString) throws Exception;
 

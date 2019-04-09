@@ -12,11 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.ho.practice.kakaopay.dto.TourInfo;
+import com.ho.practice.kakaopay.model.KakaoSeqGenerator;
 import com.ho.practice.kakaopay.model.Program;
 import com.ho.practice.kakaopay.model.ProgramTheme;
 import com.ho.practice.kakaopay.model.Region;
 import com.ho.practice.kakaopay.model.ServiceRegion;
 import com.ho.practice.kakaopay.model.Theme;
+import com.ho.practice.kakaopay.repository.KakaoSeqGeneratorRepository;
 import com.ho.practice.kakaopay.repository.ProgramRepository;
 import com.ho.practice.kakaopay.repository.ProgramThemeRepository;
 import com.ho.practice.kakaopay.repository.RegionRepository;
@@ -29,6 +31,9 @@ import com.ho.practice.kakaopay.util.AddressParser;
 public class ServiceImpl implements Service {
 
 	@Autowired
+	KakaoSeqGeneratorRepository kakaoSeqGeneratorRepository;
+	
+	@Autowired
 	ProgramRepository programRepository;
 	@Autowired
 	ThemeRepository themeRepository;
@@ -39,6 +44,18 @@ public class ServiceImpl implements Service {
 	@Autowired
 	ServiceRegionRepository serviceRegionRepository;
 	
+	@Override
+	public void initDatabase() {
+		KakaoSeqGenerator kakaoSeqGenerator = new KakaoSeqGenerator("program_code", 1L);
+        kakaoSeqGeneratorRepository.save(kakaoSeqGenerator);
+        
+        kakaoSeqGenerator = new KakaoSeqGenerator("region_code", 1L);
+        kakaoSeqGeneratorRepository.save(kakaoSeqGenerator);
+        
+        kakaoSeqGenerator = new KakaoSeqGenerator("theme_code", 1L);
+        kakaoSeqGeneratorRepository.save(kakaoSeqGenerator);
+	}
+
 	@Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
 	@Override
 	public void saveTourInfo(String programCode, String programName, String programDesc, String programDetailDesc
