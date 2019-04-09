@@ -15,36 +15,36 @@ public class AddressParser {
 			String name = tokens[i];
 			switch (i) {
 			case 0:
-				// ½Ãµµ
-				if(name.length()-1 == name.indexOf("½Ã")
-					|| name.length()-1 == name.indexOf("µµ")) {
+				// ì‹œë„
+				if(name.length()-1 == name.indexOf("ì‹œ")
+					|| name.length()-1 == name.indexOf("ë„")) {
 					region.setSidoName(name);
 				} else {
 					region.setDetailAddress(name);
 				}
 				break;
 			case 1:
-				// ½Ã±º±¸
-				if(name.length()-1 == name.indexOf("½Ã")
-					|| name.length()-1 == name.indexOf("±º")
-					|| name.length()-1 == name.indexOf("±¸")) {
+				// ì‹œêµ°êµ¬
+				if(name.length()-1 == name.indexOf("ì‹œ")
+					|| name.length()-1 == name.indexOf("êµ°")
+					|| name.length()-1 == name.indexOf("êµ¬")) {
 					region.setSggName(name);
 				} else {
 					region.setDetailAddress(name);
 				}
 				break;
 			case 2:
-				// À¾¸éµ¿
-				if(name.length()-1 == name.indexOf("À¾")
-					|| name.length()-1 == name.indexOf("¸é")
-					|| name.length()-1 == name.indexOf("µ¿")) {
+				// ìë©´ë™
+				if(name.length()-1 == name.indexOf("ì")
+					|| name.length()-1 == name.indexOf("ë©´")
+					|| name.length()-1 == name.indexOf("ë™")) {
 					region.setEmdName(name);
 				} else {
 					region.setDetailAddress(name);
 				}
 				break;
 			case 3:
-				// »ó¼¼
+				// ìƒì„¸
 				region.setDetailAddress(name);
 				break;
 			default:

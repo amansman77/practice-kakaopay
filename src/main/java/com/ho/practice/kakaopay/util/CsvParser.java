@@ -39,18 +39,18 @@ public class CsvParser {
 			char c = (char) br.read();
 			pos++;
 			if(c == '"') {
-				// ¿¬¼Ó µ¥ÀÌÅÍ À¯Áö
+				// ì—°ì† ë°ì´í„° ìœ ì§€
 				isCurrentData = !isCurrentData;
 			} else if (!isCurrentData && c == '\n') {
-				// ÁÙ¹Ù²Ş Á¦°Å
+				// ì¤„ë°”ê¿ˆ ì œê±°
 				continue;
 	        } else if (!isCurrentData && c == ',') {
-				// µ¥ÀÌÅÍ ±¸ºĞ
+	        	// ë°ì´í„° êµ¬ë¶„
 				arr[columnIdx++] = String.valueOf(curData).trim();
 				curData = new StringBuffer();
 	        } else if((!isCurrentData && c == '\r')
 					|| columnIdx == columnSize) {
-				// µ¥ÀÌÅÍÀÇ ³¡
+	        	// ë°ì´í„°ì˜ ë
 				arr[columnIdx++] = String.valueOf(curData).trim();
 				curData = new StringBuffer();
 				break;

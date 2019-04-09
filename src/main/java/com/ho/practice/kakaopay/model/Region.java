@@ -30,7 +30,7 @@ public class Region {
 	private String detailAddress;
 	
 	public void setDetailAddress(String detailAddress) {
-		if("ÀÏ´ë".equalsIgnoreCase(detailAddress) || "ÀÏ¿ø".equalsIgnoreCase(detailAddress)) {
+		if("ì¼ëŒ€".equalsIgnoreCase(detailAddress) || "ì¼ì›".equalsIgnoreCase(detailAddress)) {
 			return;
 		}
 		this.detailAddress = detailAddress;

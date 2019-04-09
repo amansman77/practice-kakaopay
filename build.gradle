@@ -6,8 +6,20 @@ plugins {
 apply plugin: 'io.spring.dependency-management'
 
 group = 'com.ho.practice'
-version = '0.0.1-SNAPSHOT'
+// version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '1.8'
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'com.ho.practice.kakaopay.KakaopayApplication'
+	}
+	from {
+		configurations.compile.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
 
 repositories {
 	mavenCentral()
@@ -22,4 +34,5 @@ dependencies {
 	implementation 'org.mariadb.jdbc:mariadb-java-client:2.3.0'
 	
 	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 }
